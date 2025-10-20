@@ -1,0 +1,109 @@
+/* programa P                      Clausula    */
+
+p(a).                              /* #1 */
+p(X) :- q(X), r(X).                /* #2 */
+p(X) :- u(X).                      /* #3 */
+
+q(X) :- s(X).                      /* #4 */
+
+r(a).                              /* #5 */
+r(b).                              /* #6 */
+
+s(a).                              /* #7 */
+s(b).                              /* #8 */
+s(c).                              /* #9 */
+
+u(d).                              /* #10 */
+
+
+%      %%%%
+% Listas
+
+cabeca([H|_],H).
+cauda([_|T],T).
+composicao(H,T,[H|T]).
+
+membro(X,[X|_]).
+membro(X,[_|R]) :- membro(X,R).
+
+remova1(X,[X|R],R).
+remova1(X,[C|R],[C|Y]) :- remova1(X,R,Y).
+
+remova2(X,[X|R],R) :- !.
+remova2(X,[C|R],[C|Y]) :- remova2(X,R,Y).
+
+remova3(_,[],[]) :- !.
+remova3(X,[X|R],Y) :- remova3(X,R,Y).
+remova3(X,[C|R],[C|Y]) :- C \= X, remova3(X,R,Y).
+
+remova4(_,[],[]) :- !.
+remova4(X,[X|R],Y) :- remova4(X,R,Y), !.
+remova4(X,[C|R],[C|Y]) :- remova4(X,R,Y).
+
+qM(_,[],[]) :- !.
+qM(N,[H|T],[H|Y]) :- N > H*H, qM(N,T,Y).
+qM(N,[H|T],Y) :- N =< H*H, qM(N,T,Y).
+
+qM2(_,[],[]) :- !.
+qM2(N,[H|T],[H|Y]) :- N > H*H, qM2(N,T,Y),!.
+qM2(N,[_|T],Y) :- qM2(N,T,Y).
+
+
+
+removaG(X,[X|R],R).
+removaG(X,[F|R],[F|S]) :- removaG(X,R,S).
+
+
+insereG(X,L,[X|L]).
+insereG(X,[Y|R],[Y|W]) :- insereG(X,R,W).
+
+insereG2(X,L,LR) :- removaG(X,LR,L).
+
+
+
+tamanho([],0).
+tamanho([_|R],T) :- tamanho(R,N),
+                    T is N+1.
+
+
+
+insere_index(0,E,L,[E|L]) :- !.
+insere_index(N,E,[X|R],[X|W]) :- N > 0,
+                                 M is N-1,
+                                 insere_index(M,E,R,W).
+
+
+
+substitua_index(0,E,[_|R], [E|R]) :-!.
+substitua_index(N,E,[X|R],[X|W]) :- N>0,
+                                    M is N-1,
+                                    substitua_index(M,E,R,W).
+
+
+
+membro(X,[X|_]) :- !.
+membro(X,[_|R]) :- membro(X,R).
+
+
+
+uniao([],C,C).
+
+uniao([X|R],C, W) :- membro(X,C),
+                     uniao(R,C,W), !.
+
+uniao([X|R],C, [X|W]) :- uniao(R,C,W).
+
+
+
+
+
+intersecao([],_,[]).
+
+intersecao([X|R],C, [X|W]) :- membro(X,C),
+                              intersecao(R,C,W), !.
+
+intersecao([_|R],C, W) :- intersecao(R,C,W).
+
+
+
+

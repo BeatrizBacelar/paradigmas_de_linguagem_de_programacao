@@ -1,0 +1,60 @@
+
+
+uniao([],C,C).
+
+uniao([X|R],C, W) :- member(X,C),
+                     uniao(R,C,W), !.
+
+uniao([X|R],C, [X|W]) :- uniao(R,C,W).
+
+
+
+
+uniaoLL1([C],C) :- !.
+uniaoLL1([C1,C2|R],C) :- uniaoLL1([C2|R],CR),
+                         uniao(C1,CR,C).
+
+
+
+uniaoLL2([C],C) :- !.
+uniaoLL2([C1,C2|R],C) :- uniao(C1,C2,CR),
+                         uniaoLL2([CR|R],C).
+
+
+uniaoLL3(CC,C) :-  uniaoLL4(CC,[],C).
+
+uniaoLL4([],A,A).
+uniaoLL4([C1|RC],A,U) :- uniao(C1,A,NA),
+                        uniaoLL4(RC,NA,U).
+
+
+
+%!  %%%% ordenação por inserção
+%
+insere(X,[],[X]) :-!.
+insere(X,[Y|R],[X,Y|R]) :- X =< Y, !.
+insere(X,[Y|R],[Y|W]) :- insere(X,R,W).
+
+
+isort([],[]) :- !.
+isort([X],[X]) :- !.
+isort([X,Y|R], LO) :- isort([Y|R],LOP),
+                      insere(X,LOP,LO).
+
+isort2(L,LO) :- isort3(L,[],LO).
+
+isort3([],LOA,LOA) :- !.
+isort3([X|R],LOA,LO) :- insere(X,LOA,NLOA),
+                        isort3(R,NLOA,LO).
+
+
+
+ssort([],[]) :- !.
+ssort([X],[X]) :- !.
+ssort([X,Y|R], [M|LOP]) :- menor(X,[Y|R],M,LS),
+                           ssort(LS,LOP).
+
+
+menor(X,[],X,[]) :- !.
+menor(X,[Y|R], M, [Y|LSR]) :- X=<Y, menor(X,R,M,LSR),!.
+menor(X,[Y|R], M, [X|LSR]) :- menor(Y,R,M,LSR).

@@ -1,0 +1,216 @@
+
+%  %%%%%%%%%%%%
+%  Comparações com Operadores numéricos
+
+maior_ou_menor(N1,N2,maior) :- N1 > N2, !.
+maior_ou_menor(N1,N2,menor) :- N1 < N2,!.
+maior_ou_menor(_,_,igual).
+% maior_ou_menor(N1,N2,igual) :- N1 =:= N2.
+
+iguais(N1,N2,"São Iguais") :- N1 =:= N2, !.
+iguais(N1,N2,"Não são Iguais") :- N1 =\= N2.
+% iguais(_,_,"Não são Iguais").
+
+% termo com cardinalidade dois
+
+iguais(N1,N2) :-  N1 =:= N2.
+
+% diferente(N1,N2, diferentes) :- N1 =\= N2.
+
+%  %%%%%%%%%%%%
+%  Comparações entre objetos
+%
+iguais2(A,A,"São Iguais") :- !.
+iguais2(_,_, "Não são iguais").
+
+%  %%%%%
+%  Operações aritméticas
+
+media(A, B, C) :-
+        C is (A+B)/2.
+
+media2(C,A,B) :- C is (A+B)/2.
+
+incrementa(I,I1) :- I1 is I + 1.
+
+
+% Escrita
+%
+fale(X,Y) :-
+    write('Este tal de '),
+    write(X),
+    write(' é '),
+    write(Y),
+    nl.
+
+% %%%%%%%
+% Operação incondicional
+
+% :- writeln("Isto sempre executa").
+
+% %%%%%%%%%%
+% Nossa primeira regra recursiva
+
+fatorial1(0,1) :- !.
+fatorial1(N,F) :- N > 0,
+                  M is N-1,
+                  fatorial1(M,F1),
+                  F is N*F1.
+
+
+% %%%%%%%%%%
+% Versão recursiva de cauda
+%
+fatorial2(N,F) :- fatorial2aux(N,1,F).
+
+fatorial2aux(0,A,A) :- !.
+fatorial2aux(N,A,F) :- N > 0,
+                       NA is N * A,
+                       M is N - 1,
+                       fatorial2aux(M,NA,F).
+
+
+% %%%%%%%%%%
+% Versão literal (não opera na cabeça
+%
+
+fatorial4(0, 1) :- !.
+
+fatorial4(N, N*Z) :-
+           N>0,
+           U is N-1,
+           fatorial4(U, Z).
+
+
+
+%      %%%%%
+%   Torre de Hanoi
+%   Caso base move 1 discos e imprime o movimento
+%   Regra move N discos e tem três chamadas recursivas:
+%     Uma para mover N-1 discos para o pino auxiliar usando o pino final
+%     Outra para mover 1 disco para o pino final
+%     E a terceira para mover of N-1 pinos do pino auxiliar para o pino
+%     final usando o pino inicial
+
+% caso base
+mova(1,I,F,_) :- write("Mova o disco no topo do "),
+                 write(I), write(" para "), write(F), nl.
+
+% regra recursiva
+mova(N,I,F,A) :- N>1,
+                 M is N-1,
+                 mova(M,I,A,F),
+                 mova(1,I,F,A),
+                 mova(M,A,F,I),!.
+
+
+%     %%%%%%
+% Colorindo o Mapa
+%
+cor(vermelha).
+cor(verde).
+cor(azul).
+% cor(amarela).
+
+viz(EstX, EstY) :- cor(EstX),
+                   cor(EstY),
+                   EstX \= EstY.
+
+
+brasil(RS, SC, PR, SP, MS, MG, RJ, MT, GO,
+       ES, BA, TO, PA, AM, RO, PI, PE, SE,
+       MA, AP, RR, AC, CE, PB, AL, RN) :-
+	viz(RS, SC),
+	viz(SC, PR),
+	viz(PR, SP), viz(PR, MS),
+	viz(SP, MS), viz(SP, MG), viz(SP, RJ),
+	viz(MS, MG), viz(MS, MT), viz(MS, GO),
+	viz(MG, GO), viz(MG, RJ), viz(MG, ES), viz(MG, BA),
+	viz(RJ, ES),
+	viz(MT, GO), viz(MT, TO), viz(MT, PA), viz(MT, AM), viz(MT, RO),
+	viz(GO, TO), viz(GO, BA),
+	viz(ES, BA),
+	viz(BA, TO), viz(BA, PI), viz(BA, PE), viz(BA, SE), viz(BA, AL),
+	viz(TO,PA), viz(TO,MA),
+	viz(PA,MA), viz(PA,AM), viz(PA,AP), viz(PA,RR),
+	viz(AM,RR), viz(AM,RO), viz(AM,AC), /* Rondonia não tem */
+	viz(PI,PE), viz(PI,MA), viz(PI,CE),
+	viz(PE,CE), viz(PE,PB), viz(PE,AL),
+	viz(SE,AL), /* Maranhão, Amapá, Roraima e Acre não tem */
+	viz(CE,PB), viz(CE,RN),
+	viz(PB,RN). /* Alagoas e Rio Grande do Norte não tem */
+
+% brasil(RS, SC, PR, SP, MS, MG, RJ, MT, GO, ES, BA, TO, PA, AM,RO,PI,PE, SE, MA, AP, RR, AC, CE, PB, AL, RN).
+
+
+
+%      %%%%%%%
+% Definindo uma gramática
+%
+% A entrada é uma frase válida expressa como com uma lista de
+% valores literais e a saída final é uma lista vazia, se todos os
+% símbolos forem processados
+%
+% Cada símbolo não terminal, incluindo a sentença inicial, é escrito
+% como uma ou mais regras. A cabeça da regra contém um par de
+% setenças, Sentrada e Ssaida, e o corpo das regras encadeiam os
+% símbolos terminais e não terminais de acordo com a gramática. Cada
+% sentença de saída de cada símbolo do corpo da regra é casado com a
+% entrada do próximo símbolo.
+%
+% Cada símbolo terminal é escrito como um ou mais fatos. Cada fato tem
+% o seguinte par de parâmetros: a lista de entrada [terminal|Ssaida] e
+% Ssaida
+%
+% Veja a seguir
+
+
+sentença(S0,S) :-  frase_nominal(S0,S1), frase_verbal(S1,S).
+
+frase_nominal(Sni,Snf) :- pronome(Sni,S1), substantivo(S1,Snf).
+
+frase_verbal(Sni,Snf) :- verbo(Sni,S1), frase_nominal(S1,Snf).
+frase_verbal(Sni,Snf) :- verbo(Sni,Snf).
+
+pronome([the|S],S).
+pronome([a|S],S).
+
+substantivo([woman|S],S).
+substantivo([man|S],S).
+
+verbo([kisses|S],S).
+verbo([loves|S],S).
+verbo([hates|S],S).
+verbo([hits|S],S).
+
+
+% %%%%%
+%  Esta foi uma das primeiras aplicações do Prolog
+%  É tão comum que há uma versão sumária
+
+
+s --> np,vp.
+
+np --> det,n.
+
+vp --> v,np.
+vp --> v.
+
+det --> [the].
+det --> [a].
+
+n --> [woman].
+n --> [man].
+
+v --> [kisses].
+v --> [loves].
+v --> [hates].
+v --> [hits].
+
+
+
+
+
+
+
+

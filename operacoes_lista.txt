@@ -1,0 +1,59 @@
+% Mescla duas listas ordenadas
+mescle([],L2,L2) :- !.
+mescle(L1,[],L1) :- !.
+mescle([X1|R1],[X2|R2],[X1|W]) :- X1 =< X2, mescle(R1,[X2|R2],W),!.
+mescle([X1|R1],[X2|R2],[X2|W]) :- mescle([X1|R1], R2, W).
+
+
+% divide um lista em duas
+divide([],[],[]) :- !.
+divide([X],[X],[]) :- !.
+divide([X,Y|R],[X|R1],[Y|R2]) :- divide(R,R1,R2).
+
+% faz a ordenação por mesclagem de uma lista de números
+mergesort([],[]) :- !.
+mergesort([X],[X]) :- !.
+mergesort(L,LO) :- divide(L,L1,L2),
+                   mergesort(L1,LO1),
+                   mergesort(L2,LO2),
+                   mescle(LO1,LO2,LO).
+
+
+% Q1 Prova Exemplo
+oculte(_,[],[]) :-!.
+oculte(Y,[Y|R],[xxxx|W]) :- oculte(Y,R,W),!.
+oculte(Y,[Z|R],[Z|W]) :- oculte(Y,R,W).
+
+
+oculte1(_,[],[]) :-!.
+oculte1(Y,[Y|R],[xxxx|W]) :- oculte1(Y,R,W).
+oculte1(Y,[Z|R],[Z|W]) :- Y \= Z, oculte1(Y,R,W).
+
+
+% Q2 Prova Exemplo
+oculteConj([],L,L) :- !.
+oculteConj([P|R],L,LR) :- oculte(P,L,LPO),
+                          oculteConj(R,LPO,LR).
+
+
+% Q3 Prova Exemplo
+intercala(_,_,0,[]) :- !.
+intercala(X,Y,N,[X|W]) :- N>0, M is N-1, intercala(Y,X,M,W).
+
+
+%Q4 Prova Exemplo
+sumarize([],[],[]) :- !.
+sumarize([X|R],[X|LE],[CX|CE]) :- conta_rem(X,R,CX,LOE),
+                                  sumarize(LOE,LE,CE).
+
+% conta e remove X de L
+%  retorna contagem de X e a lista sem X
+conta_rem(_,[],1,[]) :- !.
+conta_rem(X,[X|OE],CX,LOE) :- conta_rem(X,OE,N,LOE),
+                              CX is N+1,!.
+conta_rem(X,[Y|OE],CX,[Y|LOE]) :- conta_rem(X,OE,CX,LOE).
+
+
+
+
+

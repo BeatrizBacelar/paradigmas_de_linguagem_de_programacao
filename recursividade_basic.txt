@@ -1,0 +1,113 @@
+cidade(salvador).
+cidade(recife).
+cidade(fortaleza).
+
+estado(pernambuco).
+estado(ceará).
+estado(bahia).
+
+capital(fortaleza,ceará).
+capital(salvador,bahia).
+capital(recife,pernambuco).
+
+
+capital(_,244).
+
+
+%!  %%%%%%
+%
+%   Fatos
+homem(renato).
+homem(manoel).
+homem(ricardo).
+
+mulher(conça).
+mulher(gau).
+mulher(martha).
+mulher(joana).
+
+pai(renato,manoel).
+pai(renato,ricardo).
+pai(renato,gau).
+pai(renato,martha).
+
+mae(conça,manoel).
+mae(conça,gau).
+mae(joana,ricardo).
+mae(joana,martha).
+
+%!  %%%%%%
+%
+%   Regras
+
+progenitor(X,Y) :- mae(X,Y).
+progenitor(X,Y) :- pai(X,Y).
+
+filho(Y,X) :- progenitor(X,Y), homem(Y).
+filha(Y,X) :- progenitor(X,Y), mulher(Y).
+
+irmaos(X,Y) :- progenitor(Z,X),progenitor(Z,Y), X\==Y.
+
+irmao(X,Y) :- irmaos(X,Y), homem(X).
+irmã(X,Y) :- irmaos(X,Y), mulher(X).
+
+
+%!  %%%%%%%%%%%%
+%
+
+maior_ou_menor(N1,N2,maior) :- N1 > N2, !.
+maior_ou_menor(N1,N2,menor) :- N1 < N2, !.
+maior_ou_menor(N1,N2,igual) :- N1 =:= N2.
+
+iguais(N1,N2,"São Iguais") :- N1 =:= N2, !.
+iguais(N1,N2,"Não são Iguais") :- N1 =\= N2.
+% iguais(_,_,"Não são Iguais").
+
+iguais(N1,N2) :-  N1 =:= N2.
+
+% diferente(N1,N2, diferentes) :- N1 =\= N2.
+
+
+media(A, B, C) :-
+        C is (A+B)/2.
+
+
+incrementa(I,I1) :- I1 is I + 1.
+
+
+
+%  exemplo de escrita
+%
+%
+fale(X,Y) :-
+    write('Este tal de '),
+    write(X),
+    write(' é '),
+    write(Y),
+    nl.
+
+% :- writeln("Isto sempre executa").
+
+% programinha recursivo
+
+fatorial1(0,1) :- !.
+fatorial1(N,Y) :- N > 0,
+                 M is N-1,
+                 fatorial1(M,X),
+                 Y is N*X.
+
+
+fatorial2(N,F) :- fatorial2aux(N,1,F).
+
+fatorial2aux(0,A,A) :- !.
+fatorial2aux(N,A,F) :- N > 0,
+                       NA is N * A,
+                       M is N - 1,
+                       fatorial2aux(M,NA,F).
+
+fatorial4(0, 1) :- !.
+
+fatorial4(N, N*Z) :-
+           N>0,
+           U is N-1,
+           fatorial4(U, Z).
