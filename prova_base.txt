@@ -1,4 +1,7 @@
 % Mescla duas listas ordenadas
+%primeiro caso se X1 for menor que X2 ele é o primeiro elemento da lista
+% resultante e continua para a calda
+% caso contrário o X2 é o primeiro elemento e continua para calda do X2
 mescle([],L2,L2) :- !.
 mescle(L1,[],L1) :- !.
 mescle([X1|R1],[X2|R2],[X1|W]) :- X1 =< X2, mescle(R1,[X2|R2],W),!.
@@ -6,11 +9,19 @@ mescle([X1|R1],[X2|R2],[X2|W]) :- mescle([X1|R1], R2, W).
 
 
 % divide um lista em duas
+% se tiver apenas 1 elemento ele fará parte da primeira lista e a segunda é vazia
+% Em essência, a cada passo, ele tira dois elementos da lista original e distribui
+% um para cada nova lista, continuando até que não sobrem mais elementos.
 divide([],[],[]) :- !.
 divide([X],[X],[]) :- !.
 divide([X,Y|R],[X|R1],[Y|R2]) :- divide(R,R1,R2).
 
+
 % faz a ordenação por mesclagem de uma lista de números
+% divide a lista original em duas 
+% chama recursivamente e ordena L1 resultando em L01
+% faz o mesmo para L2 com L02 resultado
+% por fim mercla as duas listas ordenadas resultando em L0
 mergesort([],[]) :- !.
 mergesort([X],[X]) :- !.
 mergesort(L,LO) :- divide(L,L1,L2),
@@ -20,6 +31,10 @@ mergesort(L,LO) :- divide(L,L1,L2),
 
 
 % Q1 Prova Exemplo
+% caso a palavra a ser ocultada esteja no inicio da lista ela é ocultada
+% e são buscadas demais ocorrencias no resto da lista
+% caso não seja, um dado Z sera o primeiro elemento e a ocorrencia de Y é
+% buscada no resto da lista
 oculte(_,[],[]) :-!.
 oculte(Y,[Y|R],[xxxx|W]) :- oculte(Y,R,W),!.
 oculte(Y,[Z|R],[Z|W]) :- oculte(Y,R,W).
@@ -31,15 +46,65 @@ oculte1(Y,[Z|R],[Z|W]) :- Y \= Z, oculte1(Y,R,W).
 
 
 % Q2 Prova Exemplo
+% tem uma palavra P da lista, a lista total de palavras L e LR resultante
+% usa oculte para ocultar P com LPO resultante e chama recursivamente para 
+% as demais palavras 
 oculteConj([],L,L) :- !.
 oculteConj([P|R],L,LR) :- oculte(P,L,LPO),
                           oculteConj(R,LPO,LR).
 
 
 % Q3 Prova Exemplo
+% decrementa o tamanho da lista N usando M como aux
+% inverte Y e X para realizar a intercalacao corretamente
 intercala(_,_,0,[]) :- !.
 intercala(X,Y,N,[X|W]) :- N>0, M is N-1, intercala(Y,X,M,W).
 
+
+% ---------------- PREDICADO PRINCIPAL: sumarize/3 ----------------
+% OBJETIVO:
+%   Recebe uma lista L e a resume em duas outras:
+%   L1: com os elementos únicos de L.
+%   L2: com a contagem de ocorrências de cada elemento.
+% Exemplo: sumarize([a,b,a], [a,b], [2,1]).
+
+% CASO BASE: Se a lista de entrada for vazia, as listas de saída também são.
+sumarize([],[],[]) :- !.
+
+% PASSO RECURSIVO: Processa a lista pegando o primeiro elemento.
+sumarize([X|R],[X|LE],[CX|CE]) :-
+    % 1. Pega a cabeça da lista (X) e a coloca como cabeça da lista de elementos únicos ([X|LE]).
+    % 2. Chama o predicado auxiliar para:
+    %    - Contar (CX) quantas vezes X aparece no resto da lista (R).
+    %    - Gerar uma nova lista (LOE) que é o resto (R) mas sem nenhuma ocorrência de X.
+    conta_rem(X,R,CX,LOE),
+    % 3. Chama recursivamente o sumarize, mas agora com a lista já "limpa" (LOE),
+    %    garantindo que cada elemento seja processado apenas uma vez.
+    sumarize(LOE,LE,CE).
+
+
+% ---------------- PREDICADO AUXILIAR: conta_rem/4 ----------------
+% OBJETIVO:
+%   Função de apoio para o 'sumarize'.
+%   - Conta as ocorrências de um elemento (X) em uma lista.
+%   - Retorna a contagem e a lista sem esse elemento.
+
+% CASO BASE: Se a lista estiver vazia, retorna a contagem como '1' e a lista vazia.
+% O '1' é para contar o elemento que o 'sumarize' separou inicialmente.
+conta_rem(_,[],1,[]) :- !.
+
+% PASSO RECURSIVO 1: Se a cabeça da lista é o elemento procurado (X).
+conta_rem(X,[X|OE],CX,LOE) :-
+    % Chama a recursão para o resto da lista (OE) para obter a contagem parcial (N).
+    conta_rem(X,OE,N,LOE),
+    % Incrementa a contagem parcial para obter a contagem final (CX).
+    CX is N+1,!.
+
+% PASSO RECURSIVO 2: Se a cabeça da lista (Y) NÃO é o elemento procurado (X).
+conta_rem(X,[Y|OE],CX,[Y|LOE]) :-
+    % Mantém o elemento Y na lista de saída.
+    % A contagem (CX) não muda neste passo, apenas passa o valor da chamada recursiva.
+    conta_rem(X,OE,CX,LOE).
 
 %Q4 Prova Exemplo
 sumarize([],[],[]) :- !.
@@ -53,7 +118,51 @@ conta_rem(X,[X|OE],CX,LOE) :- conta_rem(X,OE,N,LOE),
                               CX is N+1,!.
 conta_rem(X,[Y|OE],CX,[Y|LOE]) :- conta_rem(X,OE,CX,LOE).
 
+
+% ---------------- PREDICADO PRINCIPAL: empacote/2 ----------------
+% OBJETIVO:
+%   Agrupa elementos consecutivos e iguais de uma lista em sub-listas (pacotes).
+% Exemplo: empacote([a,a,b,c,c], [[a,a],[b],[c,c]]).
+
+% CASO BASE: Se a lista de entrada for vazia, a lista de pacotes também é vazia.
+empacote([],[]) :- !.
+
+% PASSO RECURSIVO: Processa a lista criando um pacote de cada vez.
+empacote([X|R],[LX|LLS]) :-
+    % 1. Chama o predicado auxiliar para criar o primeiro pacote (LX) a partir
+    %    do elemento X e do resto da lista (R). O que sobrar da lista após
+    %    formar o pacote será retornado em LS.
+    emp_resto(X,R,LX,LS),
+    % 2. O pacote (LX) criado se torna a cabeça da lista de listas final.
+    % 3. Chama o empacote recursivamente para o que sobrou da lista (LS)
+    %    para criar os pacotes seguintes (LLS).
+    empacote(LS,LLS).
+
+
+% ---------------- PREDICADO AUXILIAR: emp_resto/4 ----------------
+% OBJETIVO:
+%   Função de apoio para o 'empacote'.
+%   - Pega um elemento (X) e encontra todos os seus "vizinhos" iguais e consecutivos.
+%   - Retorna o pacote com os elementos iguais e o que sobrou da lista.
+
+% CASO BASE 1: Se o resto da lista de entrada for vazia.
+emp_resto(X,[],[X],[]) :-!.
+    % O pacote é simplesmente [X] e não sobra nada da lista.
+
+% CASO BASE 2: Se o próximo elemento (Y) for DIFERENTE de X.
+emp_resto(X,[Y|RR],[X],[Y|RR]) :- X \= Y, !.
+    % A sequência de elementos iguais foi quebrada.
+    % O pacote é apenas [X] e a lista que sobrou ([Y|RR]) é devolvida intacta.
+
+% PASSO RECURSIVO: Se o próximo elemento também for X (ou seja, é IGUAL).
+emp_resto(X,[X|RR], [X|W], LS) :-
+    % Adiciona o X atual ao pacote que está sendo construído ([X|W]).
+    % Continua a busca por mais elementos 'X' no resto da lista (RR).
+    emp_resto(X,RR,W,LS).
+
 % Aula do Dia 15/10
+% Chama o auxiliar para criar o primeiro pacote. LX será o pacote (ex: [a,a]) 
+% e LS será o que sobrou da lista principal (ex: [b,c,c,c])
 empacote([],[]) :- !.
 empacote([X|R],[LX|LLS]) :- emp_resto(X,R,LX,LS),
                             empacote(LS,LLS).
@@ -61,4 +170,3 @@ empacote([X|R],[LX|LLS]) :- emp_resto(X,R,LX,LS),
 emp_resto(X,[],[X],[]) :-!.
 emp_resto(X,[Y|RR],[X],[Y|RR]) :- X \= Y, !.
 emp_resto(X,[X|RR], [X|W], LS) :- emp_resto(X,RR,W,LS).
-

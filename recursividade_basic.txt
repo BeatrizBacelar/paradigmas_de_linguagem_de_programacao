@@ -46,6 +46,7 @@ progenitor(X,Y) :- pai(X,Y).
 filho(Y,X) :- progenitor(X,Y), homem(Y).
 filha(Y,X) :- progenitor(X,Y), mulher(Y).
 
+
 irmaos(X,Y) :- progenitor(Z,X),progenitor(Z,Y), X\==Y.
 
 irmao(X,Y) :- irmaos(X,Y), homem(X).
@@ -105,6 +106,7 @@ fatorial2aux(N,A,F) :- N > 0,
                        M is N - 1,
                        fatorial2aux(M,NA,F).
 
+%com falha
 fatorial4(0, 1) :- !.
 
 fatorial4(N, N*Z) :-

@@ -1,4 +1,28 @@
+% ---------------- PREDICADO uniao/3 ----------------
+% OBJETIVO:
+%   Calcula a união de duas listas (C1 e C2), resultando em uma
+%   terceira lista (W) sem elementos repetidos.
+% Exemplo: uniao([a,b], [b,c], W) -> W = [a,b,c].
 
+% CASO BASE: Se a primeira lista for vazia, a união é a segunda lista.
+uniao([],C,C).
+
+% PASSO RECURSIVO 1: "IF" (Se o elemento X já existe na segunda lista).
+% Se a cabeça da primeira lista (X) JÁ É membro da segunda lista (C)...
+uniao([X|R],C, W) :- member(X,C),
+    % ...então X é DESCARTADO (para evitar duplicatas), e a união
+    % continua com o resto da primeira lista (R).
+    uniao(R,C,W),
+    % O CORTE (!) impede que a regra de baixo seja tentada para este X.
+    !.
+
+% PASSO RECURSIVO 2: "ELSE" (Se o elemento X é novo).
+% Esta regra só é executada se a regra anterior falhar (ou seja, X NÃO é membro de C).
+uniao([X|R],C, [X|W]) :-
+    % O elemento X é ADICIONADO à lista de resultado ([X|W]).
+    % A união continua com o resto da primeira lista (R) para formar
+    % o resto do resultado (W).
+    uniao(R,C,W).
 
 uniao([],C,C).
 
@@ -8,18 +32,71 @@ uniao([X|R],C, W) :- member(X,C),
 uniao([X|R],C, [X|W]) :- uniao(R,C,W).
 
 
+% ---------------- PREDICADO uniaoLL1/2 ----------------
+% OBJETIVO:
+%   Calcula a união de uma lista de listas.
+%   Estratégia: Recursão à Direita (processa na volta da recursão).
 
+% CASO BASE: Se a lista contém apenas uma sub-lista, a união é a própria sub-lista.
+uniaoLL1([C],C) :- !.
+
+% PASSO RECURSIVO:
+uniaoLL1([C1,C2|R],C) :-
+    % 1. Primeiro, chama a si mesmo para o RESTO da lista ([C2|R]) para
+    %    calcular a união parcial (CR).
+    uniaoLL1([C2|R],CR),
+    % 2. DEPOIS, na volta da recursão, calcula a união da primeira lista (C1)
+    %    com o resultado parcial (CR) para obter o resultado final (C).
+    uniao(C1,CR,C).
 
 uniaoLL1([C],C) :- !.
 uniaoLL1([C1,C2|R],C) :- uniaoLL1([C2|R],CR),
                          uniao(C1,CR,C).
 
+% ---------------- PREDICADO uniaoLL2/2 ----------------
+% OBJETIVO:
+%   Calcula a união de uma lista de listas.
+%   Estratégia: Recursão à Esquerda (processa na ida da recursão).
 
+% CASO BASE: Se a lista contém apenas uma sub-lista, a união é a própria sub-lista.
+uniaoLL2([C],C) :- !.
+
+% PASSO RECURSIVO:
+uniaoLL2([C1,C2|R],C) :-
+    % 1. PRIMEIRO, calcula a união das duas primeiras sub-listas (C1 e C2),
+    %    criando um resultado intermediário (CR).
+    uniao(C1,C2,CR),
+    % 2. DEPOIS, chama a si mesmo, mas substituindo as duas primeiras listas
+    %    pelo resultado da união delas ([CR|R]).
+    uniaoLL2([CR|R],C).
 
 uniaoLL2([C],C) :- !.
 uniaoLL2([C1,C2|R],C) :- uniao(C1,C2,CR),
                          uniaoLL2([CR|R],C).
+% ---------------- PREDICADO uniaoLL3/2 e uniaoLL4/3 ----------------
+% OBJETIVO:
+%   Calcula a união de uma lista de listas.
+%   Estratégia: Recursão em Cauda com Acumulador (mais eficiente).
 
+% PREDICADO PRINCIPAL: Apenas inicializa o processo.
+uniaoLL3(CC,C) :-
+    % Chama o predicado auxiliar (uniaoLL4) com um acumulador inicial vazio ([]).
+    uniaoLL4(CC,[],C).
+
+% PREDICADO AUXILIAR: Faz o trabalho recursivo.
+% uniaoLL4(Lista_de_Listas, Acumulador, Resultado_Final)
+
+% CASO BASE: Se a lista de listas acabou, o resultado final é o que está no acumulador.
+uniaoLL4([],A,A).
+
+% PASSO RECURSIVO:
+uniaoLL4([C1|RC],A,U) :-
+    % 1. Une a primeira sub-lista (C1) com o acumulador atual (A) para
+    %    gerar um novo acumulador (NA).
+    uniao(C1,A,NA),
+    % 2. Chama a si mesmo para o resto da lista de listas (RC), passando o
+    %    NOVO acumulador (NA) adiante.
+    uniaoLL4(RC,NA,U).
 
 uniaoLL3(CC,C) :-  uniaoLL4(CC,[],C).
 
@@ -31,15 +108,79 @@ uniaoLL4([C1|RC],A,U) :- uniao(C1,A,NA),
 
 %!  %%%% ordenação por inserção
 %
+% ---------------- PREDICADO insere/3 ----------------
+% OBJETIVO:
+%   Insere um elemento (X) em uma lista JÁ ORDENADA, mantendo a ordem.
+%   É o componente principal do algoritmo Insertion Sort.
+% Exemplo: insere(3, [1,2,4,5], L) -> L = [1,2,3,4,5].
+
+% CASO BASE: Se a lista estiver vazia.
+insere(X,[],[X]) :-!.
+    % O resultado de inserir X em uma lista vazia é uma nova lista contendo apenas X.
+
+% PASSO RECURSIVO 1: Encontrou a posição correta para inserir.
+insere(X,[Y|R],[X,Y|R]) :- X =< Y, !.
+    % 1. Se o elemento a inserir (X) for menor ou igual à cabeça da lista (Y),
+    %    então encontramos a posição correta.
+    % 2. A lista resultante é [X,Y|R] (X é colocado antes de Y).
+    % 3. O CORTE (!) impede a recursão, pois o trabalho terminou.
+
+% PASSO RECURSIVO 2: Continue procurando a posição.
+insere(X,[Y|R],[Y|W]) :-
+    % 1. Esta regra só é executada se a anterior falhar (ou seja, se X > Y).
+    % 2. Mantém a cabeça atual (Y) na lista de resultado.
+    % 3. Chama a si mesmo para inserir X no resto da lista (R).
+    insere(X,R,W).
+
 insere(X,[],[X]) :-!.
 insere(X,[Y|R],[X,Y|R]) :- X =< Y, !.
 insere(X,[Y|R],[Y|W]) :- insere(X,R,W).
 
+% ---------------- PREDICADO isort/2 ----------------
+% OBJETIVO:
+%   Ordena uma lista usando o algoritmo Insertion Sort.
+%   Estratégia: Recursão Padrão (processa na volta da recursão).
+
+% CASOS BASE: Uma lista vazia ou com um elemento já está ordenada.
+isort([],[]) :- !.
+isort([X],[X]) :- !.
+
+% PASSO RECURSIVO:
+isort([X,Y|R], LO) :-
+    % 1. Primeiro, ordena o RESTO da lista ([Y|R]), resultando em LOP.
+    isort([Y|R],LOP),
+    % 2. DEPOIS, na volta da recursão, usa o predicado 'insere' para colocar
+    %    a cabeça (X) na posição correta dentro da lista já ordenada (LOP).
+    insere(X,LOP,LO).
 
 isort([],[]) :- !.
 isort([X],[X]) :- !.
 isort([X,Y|R], LO) :- isort([Y|R],LOP),
                       insere(X,LOP,LO).
+
+% ---------------- PREDICADO isort2/2 e isort3/3 ----------------
+% OBJETIVO:
+%   Ordena uma lista usando Insertion Sort.
+%   Estratégia: Recursão em Cauda com Acumulador (mais eficiente).
+
+% PREDICADO PRINCIPAL: Apenas inicializa o processo.
+isort2(L,LO) :-
+    % Chama o predicado auxiliar com um acumulador inicial vazio ([]).
+    isort3(L,[],LO).
+
+% PREDICADO AUXILIAR: Faz o trabalho recursivo.
+% isort3(Lista_Entrada, Lista_Ordenada_Acumulada, Resultado_Final)
+
+% CASO BASE: Se a lista de entrada acabou, o resultado final é o acumulador.
+isort3([],LOA,LOA) :- !.
+
+% PASSO RECURSIVO:
+isort3([X|R],LOA,LO) :-
+    % 1. Pega a cabeça da lista de entrada (X) e a insere na posição correta
+    %    do acumulador (LOA), criando um novo acumulador (NLOA).
+    insere(X,LOA,NLOA),
+    % 2. Chama a si mesmo para o resto da lista (R), passando o NOVO acumulador.
+    isort3(R,NLOA,LO).
 
 isort2(L,LO) :- isort3(L,[],LO).
 
@@ -47,13 +188,47 @@ isort3([],LOA,LOA) :- !.
 isort3([X|R],LOA,LO) :- insere(X,LOA,NLOA),
                         isort3(R,NLOA,LO).
 
+% ---------------- PREDICADO ssort/2 ----------------
+% OBJETIVO:
+%   Ordena uma lista usando o algoritmo Selection Sort.
 
+% CASOS BASE: Uma lista vazia ou com um elemento já está ordenada.
+ssort([],[]) :- !.
+ssort([X],[X]) :- !.
+
+% PASSO RECURSIVO:
+ssort([X,Y|R], [M|LOP]) :-
+    % 1. Chama o predicado auxiliar 'menor' para encontrar o menor elemento (M)
+    %    na lista inteira ([X,Y|R]) e retornar a lista sem ele (LS).
+    menor(X,[Y|R],M,LS),
+    % 2. Coloca o menor elemento (M) encontrado como a cabeça da lista final.
+    % 3. Chama a si mesmo recursivamente para ordenar o que sobrou da lista (LS).
+    ssort(LS,LOP).
 
 ssort([],[]) :- !.
 ssort([X],[X]) :- !.
 ssort([X,Y|R], [M|LOP]) :- menor(X,[Y|R],M,LS),
                            ssort(LS,LOP).
+% ---------------- PREDICADO menor/4 ----------------
+% OBJETIVO:
+%   Encontra o menor elemento (M) em uma lista e retorna a Lista Sem o Menor (LS).
+% menor(Candidato_a_Menor, Resto_da_Lista, Menor_Encontrado, Lista_Sem_o_Menor)
 
+% CASO BASE: Se a lista acabou, o candidato atual é o menor.
+menor(X,[],X,[]) :- !.
+
+% RECURSÃO 1: Se o candidato (X) for menor ou igual à cabeça da lista (Y).
+menor(X,[Y|R], M, [Y|LSR]) :- X=<Y,
+    % O candidato X continua sendo o menor. Y é mantido na lista de saída.
+    % A busca continua no resto da lista (R) com o mesmo candidato X.
+    menor(X,R,M,LSR),!.
+
+% RECURSÃO 2: Se a cabeça da lista (Y) for menor que o candidato (X).
+menor(X,[Y|R], M, [X|LSR]) :-
+    % O antigo candidato X é "devolvido" para a lista de saída.
+    % O novo candidato a menor passa a ser Y.
+    % A busca continua no resto da lista (R) com o novo candidato Y.
+    menor(Y,R,M,LSR).
 
 menor(X,[],X,[]) :- !.
 menor(X,[Y|R], M, [Y|LSR]) :- X=<Y, menor(X,R,M,LSR),!.

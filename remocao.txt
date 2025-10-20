@@ -32,17 +32,62 @@ remova1(X,[C|R],[C|Y]) :- remova1(X,R,Y).
 remova2(X,[X|R],R) :- !.
 remova2(X,[C|R],[C|Y]) :- remova2(X,R,Y).
 
+% remove todas as ocorrências de X
 remova3(_,[],[]) :- !.
 remova3(X,[X|R],Y) :- remova3(X,R,Y).
 remova3(X,[C|R],[C|Y]) :- C \= X, remova3(X,R,Y).
 
+% tmambém remove todos os elementos, mais otimizado usando corte !.
 remova4(_,[],[]) :- !.
 remova4(X,[X|R],Y) :- remova4(X,R,Y), !.
 remova4(X,[C|R],[C|Y]) :- remova4(X,R,Y).
 
+
+% ---------------- PREDICADO qM/3 ----------------
+% OBJETIVO:
+%   Filtra uma lista, mantendo apenas os números H onde N > H*H.
+%   Esta versão usa condições explícitas para cada caso.
+
+% CASO BASE: Se a lista de entrada for vazia, a de saída também é.
+qM(_,[],[]) :- !.
+
+% PASSO RECURSIVO 1: CONDIÇÃO PARA MANTER o elemento.
+% Se N for maior que o quadrado da cabeça da lista (H*H)...
+qM(N,[H|T],[H|Y]) :- N > H*H,
+    % ...então H é mantido na lista de saída ([H|Y]) e a recursão continua.
+    qM(N,T,Y).
+
+% PASSO RECURSIVO 2: CONDIÇÃO PARA DESCARTAR o elemento.
+% Se N for menor ou igual ao quadrado da cabeça da lista (H*H)...
+qM(N,[H|T],Y) :- N =< H*H,
+    % ...então H é descartado (não aparece na saída) e a recursão continua.
+    qM(N,T,Y).
+
 qM(_,[],[]) :- !.
 qM(N,[H|T],[H|Y]) :- N > H*H, qM(N,T,Y).
 qM(N,[H|T],Y) :- N =< H*H, qM(N,T,Y).
+
+% ---------------- PREDICADO qM2/3 ----------------
+% OBJETIVO:
+%   Faz o mesmo que qM, mas usa um corte (!) para criar um "if-then-else".
+%   É uma forma mais comum e otimizada de escrever em Prolog.
+
+% CASO BASE: Se a lista de entrada for vazia, a de saída também é.
+qM2(_,[],[]) :- !.
+
+% PASSO RECURSIVO 1: "IF" (Se a condição for verdadeira, faça isso e pare).
+% Se N for maior que o quadrado da cabeça da lista (H*H)...
+qM2(N,[H|T],[H|Y]) :- N > H*H,
+    % ...então H é mantido na lista de saída, a recursão continua...
+    qM2(N,T,Y),
+    % ...e o CORTE (!) impede que a regra de baixo seja tentada para este elemento.
+    !.
+
+% PASSO RECURSIVO 2: "ELSE" (Se a regra de cima falhou, faça isso).
+% Esta regra só é executada se a condição N > H*H da regra anterior for FALSA.
+qM2(N,[_|T],Y) :-
+    % O elemento da cabeça é descartado (_) e a recursão continua.
+    qM2(N,T,Y).
 
 qM2(_,[],[]) :- !.
 qM2(N,[H|T],[H|Y]) :- N > H*H, qM2(N,T,Y),!.
@@ -54,9 +99,14 @@ removaG(X,[X|R],R).
 removaG(X,[F|R],[F|S]) :- removaG(X,R,S).
 
 
+% Se você pedir outra solução, o Prolog faz o backtracking
+%  e tenta a segunda regra. Ele mantém a cabeça original Y e chama recursivamente 
+% insereG para inserir X no resto da lista R
 insereG(X,L,[X|L]).
 insereG(X,[Y|R],[Y|W]) :- insereG(X,R,W).
 
+%Inserir X na lista L para obter a lista resultante LR 
+% é verdade se, ao remover X de LR, obtivermos a lista original L.
 insereG2(X,L,LR) :- removaG(X,LR,L).
 
 
@@ -65,7 +115,27 @@ tamanho([],0).
 tamanho([_|R],T) :- tamanho(R,N),
                     T is N+1.
 
+% ---------------- PREDICADO insere_index/4 ----------------
+% OBJETIVO:
+%   Insere um Elemento (E) em uma Lista (L) em um Índice (N) específico.
+%   A contagem de índice começa em 0.
+% Exemplo: insere_index(2, x, [a,b,c,d], L) -> L = [a,b,x,c,d].
 
+% CASO BASE: Atingiu o índice 0, que é a posição correta para inserir.
+insere_index(0,E,L,[E|L]) :- !.
+    % 1. Quando o contador de índice (N) chega a 0, esta regra é ativada.
+    % 2. A lista resultante é [E|L], ou seja, o Elemento (E) é colocado
+    %    na cabeça da lista que restou (L).
+    % 3. O corte (!) garante que a outra regra não seja tentada.
+
+% PASSO RECURSIVO: Enquanto o índice N for maior que 0.
+insere_index(N,E,[X|R],[X|W]) :- N > 0,
+    % 1. Pega a cabeça da lista (X) e a mantém na lista resultante ([X|W]),
+    %    pois ainda não chegamos na posição de inserção.
+    % 2. Decrementa o contador de índice (N-1), pois "andamos" uma casa na lista.
+    M is N-1,
+    % 3. Chama a si mesmo para continuar a busca pelo novo índice (M)
+    %    no resto
 
 insere_index(0,E,L,[E|L]) :- !.
 insere_index(N,E,[X|R],[X|W]) :- N > 0,
@@ -73,18 +143,85 @@ insere_index(N,E,[X|R],[X|W]) :- N > 0,
                                  insere_index(M,E,R,W).
 
 
+% ---------------- PREDICADO substitua_index/4 ----------------
+% OBJETIVO:
+%   Substitui o elemento em um Índice (N) específico de uma Lista
+%   por um novo Elemento (E).
+% Exemplo: substitua_index(2, x, [a,b,c,d], L) -> L = [a,b,x,d].
+
+% CASO BASE: Atingiu o índice 0, que é a posição a ser substituída.
+substitua_index(0,E,[_|R], [E|R]) :-!.
+    % 1. Quando o contador de índice (N) chega a 0, esta regra é ativada.
+    % 2. [_|R]: Pega a lista de entrada, IGNORA a sua cabeça (o elemento
+    %    antigo que está sendo substituído) e pega o resto (R).
+    % 3. [E|R]: A lista resultante é construída colocando o novo Elemento (E)
+    %    na cabeça, seguido pelo resto da lista original (R).
+    % 4. O corte (!) impede que a outra regra seja tentada.
+
+% PASSO RECURSIVO: Enquanto o índice N for maior que 0.
+substitua_index(N,E,[X|R],[X|W]) :- N>0,
+    % 1. Mantém a cabeça da lista (X), pois ainda não chegamos na posição
+    %    a ser substituída.
+    % 2. Decrementa o contador de índice para a próxima chamada.
+    M is N-1,
+    % 3. Chama a si mesmo para continuar a busca pelo novo índice (M)
+    %    no resto da lista (R).
+    substitua_index(M,E,R,W).
 
 substitua_index(0,E,[_|R], [E|R]) :-!.
 substitua_index(N,E,[X|R],[X|W]) :- N>0,
                                     M is N-1,
                                     substitua_index(M,E,R,W).
 
+% ---------------- PREDICADO membro/2 ----------------
+% OBJETIVO:
+%   Verifica se um Elemento (X) pertence a uma Lista.
+%   Esta versão é "determinística": para assim que encontra a primeira ocorrência.
 
+% CASO BASE: Se o elemento X for a cabeça da lista.
+membro(X,[X|_]) :- !.
+    % 1. [X|_]: Unifica se X for o primeiro elemento da lista.
+    % 2. O que vem depois da cabeça (a cauda '_') não importa.
+    % 3. O CORTE (!): Impede o Prolog de procurar outras ocorrências de X
+    %    na lista. Torna a busca mais rápida se você só precisa saber
+    %    "sim" ou "não".
+
+% PASSO RECURSIVO: Se X não for a cabeça, procure no resto da lista.
+membro(X,[_|R]) :-
+    % 1. Esta regra só é tentada se a de cima falhar (ou seja, X não é a cabeça).
+    % 2. [_|R]: Ignora a cabeça da lista e pega o resto (R).
+    % 3. membro(X,R): Chama a si mesmo para verificar se X é membro do resto da lista.
+    membro(X,R).
 
 membro(X,[X|_]) :- !.
 membro(X,[_|R]) :- membro(X,R).
 
 
+% ---------------- PREDICADO uniao/3 ----------------
+% OBJETIVO:
+%   Calcula a união de duas listas (C1 e C2), resultando em uma
+%   terceira lista (W) sem elementos repetidos.
+% Exemplo: uniao([a,b], [b,c], W) -> W = [a,b,c].
+
+% CASO BASE: Se a primeira lista for vazia, a união é a segunda lista.
+uniao([],C,C).
+
+% PASSO RECURSIVO 1: "IF" (Se o elemento X já existe na segunda lista).
+% Se a cabeça da primeira lista (X) JÁ É membro da segunda lista (C)...
+uniao([X|R],C, W) :- membro(X,C),
+    % ...então X é DESCARTADO (para evitar duplicatas), e a união
+    % continua com o resto da primeira lista (R).
+    uniao(R,C,W),
+    % O CORTE (!) impede que a regra de baixo seja tentada para este X.
+    !.
+
+% PASSO RECURSIVO 2: "ELSE" (Se o elemento X é novo).
+% Esta regra só é executada se a regra anterior falhar (ou seja, X NÃO é membro de C).
+uniao([X|R],C, [X|W]) :-
+    % O elemento X é ADICIONADO à lista de resultado ([X|W]).
+    % A união continua com o resto da primeira lista (R) para formar
+    % o resto do resultado (W).
+    uniao(R,C,W).
 
 uniao([],C,C).
 
@@ -94,7 +231,30 @@ uniao([X|R],C, W) :- membro(X,C),
 uniao([X|R],C, [X|W]) :- uniao(R,C,W).
 
 
+% ---------------- PREDICADO intersecao/3 ----------------
+% OBJETIVO:
+%   Calcula a interseção de duas listas (C1 e C2), resultando em uma
+%   terceira lista (W) que contém apenas os elementos em comum.
+% Exemplo: intersecao([a,b,d], [b,c,d], W) -> W = [b,d].
 
+% CASO BASE: A interseção de uma lista vazia com qualquer outra é uma lista vazia.
+intersecao([],_,[]).
+
+% PASSO RECURSIVO 1: "IF" (Se o elemento X também existe na segunda lista).
+% Se a cabeça da primeira lista (X) É membro da segunda lista (C)...
+intersecao([X|R],C, [X|W]) :- membro(X,C),
+    % ...então X é MANTIDO na lista de resultado ([X|W]), e a
+    % interseção continua com o resto da primeira lista (R).
+    intersecao(R,C,W),
+    % O CORTE (!) impede que a regra de baixo seja tentada para este X.
+    !.
+
+% PASSO RECURSIVO 2: "ELSE" (Se o elemento X não é comum).
+% Esta regra só é executada se a regra anterior falhar (ou seja, X NÃO é membro de C).
+intersecao([_|R],C, W) :-
+    % O elemento da cabeça é DESCARTADO (_), e a interseção continua
+    % com o resto da primeira lista (R).
+    intersecao(R,C,W).
 
 
 intersecao([],_,[]).
@@ -103,7 +263,4 @@ intersecao([X|R],C, [X|W]) :- membro(X,C),
                               intersecao(R,C,W), !.
 
 intersecao([_|R],C, W) :- intersecao(R,C,W).
-
-
-
 

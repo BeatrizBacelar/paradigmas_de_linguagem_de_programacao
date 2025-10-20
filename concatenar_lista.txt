@@ -1,14 +1,18 @@
 % Q1 - Concatenar
-%
+% se receber uma lista vazia e outra lista L com conteúdo retorna L 
+% Dado X a cabeça da primeira lista e R a calda ou resto, temos L a segunda lista
+% X será o primeiro elemento da concatenação e W o resto. Chama recursivamente passando  
+% Resto, Lista e W que é a concatenação
 concatenar([],L,L) :- !.
 concatenar([X|R], L, [X|W]) :- concatenar(R,L,W).
 
 
 % Q2 - Concatenar Inv
-
+% chama a concaterna, mas passando a ordem inversa das listas
 concatenarInv(L1,L2,L3) :- concatenar(L2,L1,L3).
 
 % v2
+% comeca a concatenar pelo primeiro elemento da segunda lista e por aí vai
 concInv(L,[],L) :- !.
 concInv(L,[X|R],[X|W]) :- concInv(L,R,W).
 
